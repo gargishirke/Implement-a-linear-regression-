@@ -1,0 +1,452 @@
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the training and test datasets
+
+train = pd.read_csv('/kaggle/input/house-prices-advanced-regression-techniques/train.csv')
+test = pd.read_csv('/kaggle/input/house-prices-advanced-regression-techniques/test.csv')
+
+# Save original IDs before scaling
+
+original_ids = test['Id'].copy()
+
+# Take a quick look at the first few rows of the data
+
+train.head(2)
+
+test.head(2)
+
+train.shape
+
+test.shape
+
+# Check the structure of the training data
+train.info()
+
+# Check the structure of the test data
+
+test.info()
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# Sample DataFrame
+data = {
+    'Column1': [1, 2, 3, 4],
+    'Column2': [4, 3, 2, 1],
+    'Column3': [1, 2, np.nan, 4],
+    'SalePrice': [100, 200, 300, 400]
+}
+df = pd.DataFrame(data)
+
+# Handle missing values (simple imputation for the sake of visualization)
+df.fillna(df.mean(), inplace=True)
+
+# Calculate the correlation matrix
+corr_matrix = df.corr()
+
+# Create a heatmap with a different color map for the boxes
+plt.figure(figsize=(10, 8))
+sns.heatmap(
+    corr_matrix, 
+    annot=True, 
+    cmap='viridis',  # Change the color map for the heatmap boxes
+    fmt='.2f', 
+    linewidths=0.5, 
+    annot_kws={"size": 10, "color": "white"}  # Annotation text color
+)
+plt.title('Correlation Heatmap')
+plt.show()
+
+# Check for missing values in the train dataset
+
+missing_values = train.isnull().sum().sort_values(ascending=False)
+
+# Display the columns with missing values
+
+missing_values[missing_values > 0]
+
+# Calculate the number of missing values and their percentage
+
+missing_values = train.isnull().sum().sort_values(ascending=False)
+missing_percentage = (missing_values / len(train)) * 100
+
+# Combine both into a single DataFrame for better readability
+
+missing_data = pd.DataFrame({'Missing Values': missing_values, 'Percentage': missing_percentage})
+
+# Display columns with missing values
+
+missing_data[missing_data['Missing Values'] > 0]
+
+# Check for missing values in the train dataset
+
+missing_values = test.isnull().sum().sort_values(ascending=False)
+
+# Display the columns with missing values
+
+missing_values[missing_values > 0]
+
+# Calculate the number of missing values and their percentage
+
+missing_values = test.isnull().sum().sort_values(ascending=False)
+missing_percentage = (missing_values / len(test)) * 100
+
+# Combine both into a single DataFrame for better readability
+
+missing_data = pd.DataFrame({'Missing Values': missing_values, 'Percentage': missing_percentage})
+
+# Display columns with missing values
+
+missing_data[missing_data['Missing Values'] > 0]
+
+# Calculate the percentage of missing values for each column in train and test DataFrames
+
+train_missing_percentage = train.isnull().mean()
+test_missing_percentage = test.isnull().mean()
+
+# Identify columns with more than 50% missing values
+train_cols_to_drop = train_missing_percentage[train_missing_percentage > 0.4].index
+test_cols_to_drop = test_missing_percentage[test_missing_percentage > 0.4].index
+
+# Drop the identified columns from both DataFrames
+train = train.drop(columns=train_cols_to_drop)
+test = test.drop(columns=test_cols_to_drop)
+
+print("ok")
+
+from sklearn.impute import SimpleImputer
+
+# Numerical and categorical columns in train data
+num_cols_train = train.select_dtypes(include=['float64', 'int64']).columns
+cat_cols_train = train.select_dtypes(include=['object']).columns
+
+# Numerical and categorical columns in test data
+num_cols_test = test.select_dtypes(include=['float64', 'int64']).columns
+cat_cols_test = test.select_dtypes(include=['object']).columns
+
+# Ensure only the columns present in both datasets are used
+num_cols = [col for col in num_cols_train if col in num_cols_test]
+cat_cols = [col for col in cat_cols_train if col in cat_cols_test]
+
+# Initialize imputers for numerical and categorical columns
+imputer_num = SimpleImputer(strategy='mean')
+imputer_cat = SimpleImputer(strategy='most_frequent')
+
+# Apply imputation to numerical columns
+train[num_cols] = imputer_num.fit_transform(train[num_cols])
+test[num_cols] = imputer_num.transform(test[num_cols])
+
+# Apply imputation to categorical columns
+train[cat_cols] = imputer_cat.fit_transform(train[cat_cols])
+test[cat_cols] = imputer_cat.transform(test[cat_cols])
+
+print("ok")
+
+# Check for missing values in the train dataset
+
+missing_values = train.isnull().sum().sort_values(ascending=False)
+
+# Display the columns with missing values
+
+missing_values[missing_values > 0]
+
+# Check for missing values in the train dataset
+
+missing_values = test.isnull().sum().sort_values(ascending=False)
+
+# Display the columns with missing values
+
+missing_values[missing_values > 0]
+
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+
+# Example DataFrames (replace these with your actual data)
+# train = pd.read_csv('train.csv')
+# test = pd.read_csv('test.csv')
+
+# Identify categorical columns
+categorical_cols = train.select_dtypes(include=['object']).columns
+print(f"Categorical columns: {categorical_cols}")
+
+# Create a OneHotEncoder instance
+encoder = OneHotEncoder(sparse_output=False, drop='first')  # Use sparse_output instead of sparse
+
+# Fit and transform the training data
+train_encoded_array = encoder.fit_transform(train[categorical_cols])
+train_encoded = pd.DataFrame(train_encoded_array, columns=encoder.get_feature_names_out(categorical_cols))
+print(f"Training encoded columns: {train_encoded.columns}")
+
+# Transform the test data
+test_encoded_array = encoder.transform(test[categorical_cols])
+test_encoded = pd.DataFrame(test_encoded_array, columns=encoder.get_feature_names_out(categorical_cols))
+print(f"Test encoded columns: {test_encoded.columns}")
+
+# Drop original categorical columns and concatenate encoded columns
+train = pd.concat([train.drop(columns=categorical_cols), train_encoded], axis=1)
+test = pd.concat([test.drop(columns=categorical_cols), test_encoded], axis=1)
+
+# Print results
+print("Train DataFrame:")
+print(train.head())
+print("Test DataFrame:")
+print(test.head())
+
+from sklearn.preprocessing import StandardScaler
+import pandas as pd
+import numpy as np
+
+# Assume `train` and `test` are your DataFrames
+# Example: train = pd.read_csv('train.csv')
+# Example: test = pd.read_csv('test.csv')
+
+# Print initial data
+print("Train DataFrame head:\n", train.head())
+print("Test DataFrame head:\n", test.head())
+
+# Identify numerical columns, excluding 'SalePrice' and 'Id'
+numerical_cols = train.select_dtypes(include=['int64', 'float64']).columns
+numerical_cols = numerical_cols.drop(['SalePrice', 'Id'], errors='ignore')
+
+print("Numerical columns:\n", numerical_cols)
+
+# Create a StandardScaler instance
+scaler = StandardScaler()
+
+# Fit the scaler on the training data (excluding 'SalePrice' and 'Id')
+train[numerical_cols] = scaler.fit_transform(train[numerical_cols])
+
+# Drop 'Id' column from test set if it exists
+if 'Id' in test.columns:
+    test = test.drop('Id', axis=1)
+
+# Ensure that test columns match the train columns
+for col in numerical_cols:
+    if col not in test.columns:
+        # Add missing columns with NaN
+        test[col] = np.nan
+
+# Fill missing values in the test set
+test[numerical_cols] = test[numerical_cols].fillna(0)  # or use another method
+
+print("Test DataFrame with missing values handled:\n", test.head())
+
+# Apply the same scaling to the test data
+test[numerical_cols] = scaler.transform(test[numerical_cols])
+
+print("Scaled Train DataFrame:\n", train[numerical_cols].head())
+print("Scaled Test DataFrame:\n", test[numerical_cols].head())
+
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+
+# Drop 'Id' column from training data
+X = train.drop(['SalePrice', 'Id'], axis=1)
+y = train['SalePrice']
+
+# Split the data
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize the best model (e.g., GradientBoostingRegressor)
+model = GradientBoostingRegressor(n_estimators=100, random_state=42)
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Validate the model
+y_pred = model.predict(X_val)
+
+# Apply log transformation to y and y_pred for RMSE calculation
+y_val_log = np.log(y_val)
+y_pred_log = np.log(y_pred + 1)  # Adding 1 to avoid log(0)
+
+# Calculate Mean Squared Error on the logarithm of sale prices
+mse_log = mean_squared_error(y_val_log, y_pred_log)
+rmse_log = np.sqrt(mse_log)
+
+print(f"Validation Root Mean Squared Error (RMSE) on Logarithm of Sale Prices: {rmse_log}")
+
+import pandas as pd
+from sklearn.linear_model import LinearRegression  # Example model, replace with your model if different
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+
+# Load the test data and the sample submission file
+test_path = '/kaggle/input/house-prices-advanced-regression-techniques/test.csv'
+sample_submission_path = '/kaggle/input/house-prices-advanced-regression-techniques/sample_submission.csv'
+train_path = '/kaggle/input/house-prices-advanced-regression-techniques/train.csv'
+
+# Load the train and test datasets
+df_train = pd.read_csv(train_path)
+df_test = pd.read_csv(test_path)
+sample_submission = pd.read_csv(sample_submission_path)
+
+# Print the first few rows of the sample submission to check the structure
+print(sample_submission.head())
+
+# Step 1: Prepare features and target
+X_train = df_train.drop(columns=['SalePrice'])
+y_train = df_train['SalePrice']
+X_test = df_test.copy()
+
+# Step 2: Define preprocessing pipeline (example using simple numeric and categorical encoding)
+numeric_features = X_train.select_dtypes(include=['int64', 'float64']).columns
+categorical_features = X_train.select_dtypes(include=['object']).columns
+
+numeric_transformer = SimpleImputer(strategy='median')
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+
+# Create a preprocessor object using ColumnTransformer
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)
+    ]
+)
+
+# Step 3: Create a pipeline with preprocessing and model training
+model = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', LinearRegression())
+])
+
+# Fit the model
+model.fit(X_train, y_train)
+
+# Step 4: Make predictions on the test set
+predictions = model.predict(X_test)
+
+# Print the shape of predictions
+print("Predictions shape:", predictions.shape)
+
+# Ensure predictions and sample_submission have the same number of rows
+assert len(predictions) == len(sample_submission), "Mismatch between predictions and sample_submission lengths"
+
+# Replace the 'SalePrice' column in the sample_submission DataFrame with your predictions
+sample_submission['SalePrice'] = predictions
+
+# Save the updated DataFrame to a new CSV file
+submission_path = 'submission7.csv'
+sample_submission.to_csv(submission_path, index=False)
+
+# Check if the file was created
+import os
+print(os.path.exists(submission_path))
+
+# Optional: Print the first few rows of the submission file to verify
+print(pd.read_csv(submission_path).head())
+
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.impute import SimpleImputer
+import joblib
+import os
+
+# Step 1: Load the datasets
+# Use Kaggle-specific paths
+train_file_path = '/kaggle/input/house-prices-advanced-regression-techniques/train.csv'
+test_file_path = '/kaggle/input/house-prices-advanced-regression-techniques/test.csv'
+sample_submission_file_path = '/kaggle/input/house-prices-advanced-regression-techniques/sample_submission.csv'
+
+# Load the training and test datasets
+try:
+    df_train = pd.read_csv(train_file_path)
+    df_test = pd.read_csv(test_file_path)
+    print("Training and test datasets loaded successfully.")
+except FileNotFoundError as e:
+    print(f"FileNotFoundError: {e.filename} not found. Please check the file paths.")
+    raise
+except pd.errors.EmptyDataError:
+    print("EmptyDataError: No data in the file. Please check the contents of the CSV files.")
+    raise
+except pd.errors.ParserError:
+    print("ParserError: Error parsing the file. Please check the file format and content.")
+    raise
+except Exception as e:
+    print(f"An unexpected error occurred: {str(e)}")
+    raise
+
+# Step 2: Prepare the training data
+# Separate target and features
+X_train = df_train.drop(columns=['SalePrice'])
+y_train = df_train['SalePrice']
+
+# Identify numerical and categorical features
+numerical_features = X_train.select_dtypes(include=['int64', 'float64']).columns
+categorical_features = X_train.select_dtypes(include=['object']).columns
+
+# Define transformers for numerical and categorical features
+numerical_transformer = SimpleImputer(strategy='median')  # Handle missing values
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),  # Handle missing values
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))  # One-hot encode categorical features
+])
+
+# Create a ColumnTransformer to apply the transformations
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numerical_transformer, numerical_features),
+        ('cat', categorical_transformer, categorical_features)
+    ])
+
+# Step 3: Create a pipeline that includes preprocessing and model training
+pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('model', LinearRegression())
+])
+
+# Fit the pipeline on the training data
+pipeline.fit(X_train, y_train)
+
+# Optionally, save the trained pipeline
+joblib.dump(pipeline, 'trained_model.pkl')
+
+# Step 4: Predict the SalePrice for the test dataset
+# Apply the same preprocessing to the test set
+X_test = df_test.copy()  # Make a copy of the test set for safety
+y_pred_test = pipeline.predict(X_test)
+
+# Step 5: Check if 'Id' column exists in df_test, if not use index
+if 'Id' in df_test.columns:
+    ids = df_test['Id']
+else:
+    ids = df_test.index
+
+# Step 6: Prepare the submission file
+submission = pd.DataFrame({
+    'Id': ids,
+    'SalePrice': y_pred_test
+})
+
+# Specify the path for the submission file
+submission_file_path = '/kaggle/working/submission.csv'
+submission.to_csv(submission_file_path, index=False)
+
+# Verify if the submission file was created successfully
+if os.path.exists(submission_file_path):
+    print(f"Submission file saved to {submission_file_path}")
+else:
+    print("Failed to create submission file.")
+
+
+
+
